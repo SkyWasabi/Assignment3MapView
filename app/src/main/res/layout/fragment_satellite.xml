@@ -10,8 +10,8 @@
         android:layout_height="wrap_content"
         android:id="@+id/mapview"
         android:scaleType="fitXY"
-        android:cropToPadding="false"
-        android:adjustViewBounds="false" />
+        android:adjustViewBounds="true"
+        android:cropToPadding="true" />
 
     <TextView
         android:paddingTop="10dp"
