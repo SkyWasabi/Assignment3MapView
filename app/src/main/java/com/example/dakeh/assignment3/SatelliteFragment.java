@@ -2,6 +2,7 @@ package com.example.dakeh.assignment3;
 
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -9,6 +10,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
+import android.support.v4.util.Pair;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,13 +23,20 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.StringTokenizer;
 
@@ -38,14 +47,16 @@ public class SatelliteFragment extends Fragment {
 
     private float lat;
     private float lon;
-    private String api_key = "11KwxbBt94WW26CWimobLPhaE4AgXxxhwxywTTXU";
+    private static String api_key = "11KwxbBt94WW26CWimobLPhaE4AgXxxhwxywTTXU";
     private URL api_url;
     private String savepath;
+    private int index = 0;
+
+    ArrayList<Satellite> satelliteArrayList = new ArrayList<Satellite>();;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
     }
 
     @Override
@@ -55,7 +66,6 @@ public class SatelliteFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_satellite, container, false);
         mapview = (ImageView) view.findViewById(R.id.mapview);
         textView = (TextView) view.findViewById(R.id.labeltext);
-
         return view;
     }
 
@@ -66,16 +76,20 @@ public class SatelliteFragment extends Fragment {
 
     }
 
-    public void performNASARequest(String date,Satellite satellite) {
+    public void performNASARequest(String date, float lon, float lat) {
 
-        String url = "https://api.nasa.gov/planetary/earth/imagery?lon=" + String.valueOf(satellite.getLon()) + "&lat=" + String.valueOf(satellite.getLat())
-                + "&date=" + date + "&cloud_score=True&api_key=" + satellite.getApi_key();
+        String url = "https://api.nasa.gov/planetary/earth/imagery?lon=" + String.valueOf(lon) + "&lat=" + String.valueOf(lat)
+                + "&date=" + date + "&cloud_score=True&api_key=" + api_key;
+
+        //Log.d("Check URL", url);
 
         //new DownloadTask().execute("https://api.nasa.gov/planetary/earth/imagery?lon=150.8931239&lat=-34.424984&date=2015-05-01&cloud_score=True&api_key=11KwxbBt94WW26CWimobLPhaE4AgXxxhwxywTTXU");
         new DownloadTask().execute(url);
     }
 
     private class DownloadTask extends AsyncTask<String, Void, String> {
+        Satellite satellite = new Satellite();
+
         @Override
         protected String doInBackground(String... urls) {
             try {
@@ -138,59 +152,122 @@ public class SatelliteFragment extends Fragment {
                 String imageurl = reader.getString("url");
                 String satellitedate = reader.getString("date");
 
-                textView.setText(satellitedate);
+                satellite.setImage_url(imageurl);
+                satellite.setDate(satellitedate);
+
                 //Log.d("date", satellitedate);
-                new DownloadImageTask(mapview).execute(imageurl);
+                new DownloadImageTask().execute(satellite.getImage_url());
+                satelliteArrayList.add(satellite);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
-    }
 
-    private class DownloadImageTask extends  AsyncTask<String, Void, Bitmap> {
-        ImageView download;
-        public DownloadImageTask(ImageView download) {
-            this.download = download;
+        private class DownloadImageTask extends  AsyncTask<String, Void, Bitmap> {
+
+            protected Bitmap doInBackground(String... urls) {
+                Bitmap mappic = null;
+                try {
+                    InputStream in = new URL(urls[0]).openStream();
+                    mappic = BitmapFactory.decodeStream(in);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                savepath = saveToInternalStorage(mappic);
+                Log.d("Path", savepath);
+                satellite.setBitmap(savepath);
+                satelliteArrayList.add(satellite);
+                return mappic;
+            }
+
+            protected void onPostExecute(Bitmap result) {
+
+
+            }
         }
 
-        protected Bitmap doInBackground(String... urls) {
-            Bitmap mappic = null;
+        private String saveToInternalStorage(Bitmap bitmap) {
+
+            ContextWrapper cw = new ContextWrapper(getActivity().getApplicationContext());
+            File directory = cw.getDir("imageDir" + String.valueOf(index) , Context.MODE_PRIVATE);
+            File mypath = new File(directory, "satpic.jpg");
+
+            FileOutputStream fos;
+
             try {
-                InputStream in = new URL(urls[0]).openStream();
-                mappic = BitmapFactory.decodeStream(in);
+                fos = new FileOutputStream(mypath);
+
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+                Log.d("Save", "Complete");
+                fos.close();
+                index++;
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
-            savepath = saveToInternalStorage(mappic);
-            Log.d("Path", savepath);
-
-            return mappic;
-        }
-
-        protected void onPostExecute(Bitmap result) {
-            download.setImageBitmap(result);
+            return directory.getAbsolutePath();
         }
     }
 
-    private String saveToInternalStorage(Bitmap bitmap) {
-        ContextWrapper cw = new ContextWrapper(getActivity().getApplicationContext());
-        File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
-        File mypath = new File(directory, "satpic.jpg");
 
-        FileOutputStream fos;
+
+    public void performNASARequestSequence() {
+
+        Date date = new Date();
+        String sdate = "2015-05-01";
+
+        SimpleDateFormat fomatter = new SimpleDateFormat("yyyy-MM-dd");
 
         try {
-            fos = new FileOutputStream(mypath);
-
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
-            Log.d("Save", "Complete");
-            fos.close();
-        } catch (Exception e) {
+            date = fomatter.parse(sdate);
+        } catch (ParseException e) {
             e.printStackTrace();
         }
 
-        return directory.getAbsolutePath();
+        lon = 150.8931239f;
+        lat = -34.424984f;
+
+        String adate = getDate(date, 0);
+
+        performNASARequest(adate, lon, lat);
+
+        adate = getDate(date, 16);
+        //Log.d("Check date", adate);
+        performNASARequest(adate, lon, lat);
+
+        adate = getDate(date, 32);
+        //Log.d("Check date", adate);
+        performNASARequest(adate, lon, lat);
+
     }
 
+    public String getDate(Date date, int days) {
+        String sdate;
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.add(Calendar.DATE, -days);
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        sdate = sdf.format(calendar.getTime());
+
+        return sdate;
+    }
+
+    public void SetUI() {
+        Log.d("Size", String.valueOf(satelliteArrayList.size()));
+        String path = satelliteArrayList.get(satelliteArrayList.size()).getBitmap();
+
+        loadImageFromStorage(path);
+    }
+
+    private void loadImageFromStorage(String path) {
+        try {
+            File f = new File(path, "satpic.jpg");
+            Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
+            mapview.setImageBitmap(b);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
 }

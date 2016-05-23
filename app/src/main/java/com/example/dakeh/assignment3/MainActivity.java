@@ -9,10 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,26 +28,19 @@ public class MainActivity extends AppCompatActivity {
         fragmentTransaction.commit();
 
 
-        String format = "yyyy-MM-dd";
-        SimpleDateFormat sdf = new SimpleDateFormat(format, Locale.getDefault());
-        String sdate = "2015-05-01";
-
-
-
         if (networkInfo != null && networkInfo.isConnected()) {
             Log.d("Connected", "true");
-            Satellite satellite = new Satellite();
+            satelliteFragment.performNASARequestSequence();
 
-            satellite.setLon(150.8931239f);
-            satellite.setLat(-34.424984f);
-
-            satelliteFragment.performNASARequest(sdate, satellite);
         }
 
         else {
             Log.d("Connected", "false");
         }
     }
+
+
+
 
 }
 
