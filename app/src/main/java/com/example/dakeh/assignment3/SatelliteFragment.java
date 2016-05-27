@@ -1,5 +1,6 @@
 package com.example.dakeh.assignment3;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.SharedPreferences;
@@ -8,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.Pair;
@@ -38,7 +40,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.StringTokenizer;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
 
 public class SatelliteFragment extends Fragment {
 
@@ -50,9 +58,15 @@ public class SatelliteFragment extends Fragment {
     private static String api_key = "11KwxbBt94WW26CWimobLPhaE4AgXxxhwxywTTXU";
     private URL api_url;
     private String savepath;
-    private int index = 0;
-
-    ArrayList<Satellite> satelliteArrayList = new ArrayList<Satellite>();;
+    private int counter = 0;
+    private static int imgnum = 5;
+    private ProgressDialog progress;
+    private String [] datearray = new String[imgnum];
+    private Bitmap [] img = new Bitmap[imgnum];
+    private HashMap<String, Bitmap> data = new HashMap<String, Bitmap> ();
+    private Timer t;
+    private TimerTask timer;
+    private int position = 0;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -66,6 +80,8 @@ public class SatelliteFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_satellite, container, false);
         mapview = (ImageView) view.findViewById(R.id.mapview);
         textView = (TextView) view.findViewById(R.id.labeltext);
+//        t = new Timer();
+//        t.scheduleAtFixedRate(timer, 0, 5000);
         return view;
     }
 
@@ -78,18 +94,20 @@ public class SatelliteFragment extends Fragment {
 
     public void performNASARequest(String date, float lon, float lat) {
 
+
         String url = "https://api.nasa.gov/planetary/earth/imagery?lon=" + String.valueOf(lon) + "&lat=" + String.valueOf(lat)
                 + "&date=" + date + "&cloud_score=True&api_key=" + api_key;
 
         //Log.d("Check URL", url);
 
         //new DownloadTask().execute("https://api.nasa.gov/planetary/earth/imagery?lon=150.8931239&lat=-34.424984&date=2015-05-01&cloud_score=True&api_key=11KwxbBt94WW26CWimobLPhaE4AgXxxhwxywTTXU");
+
         new DownloadTask().execute(url);
     }
 
+
     private class DownloadTask extends AsyncTask<String, Void, String> {
         Satellite satellite = new Satellite();
-
         @Override
         protected String doInBackground(String... urls) {
             try {
@@ -105,6 +123,8 @@ public class SatelliteFragment extends Fragment {
             //textView.setText(result);
             fetchImage(result);
         }
+
+
 
         private String performRequest(String myURL) throws  IOException {
             InputStream in = null;
@@ -148,20 +168,29 @@ public class SatelliteFragment extends Fragment {
         public void fetchImage(String result) {
             try {
                 JSONObject reader = new JSONObject(result);
-
                 String imageurl = reader.getString("url");
                 String satellitedate = reader.getString("date");
 
-                satellite.setImage_url(imageurl);
-                satellite.setDate(satellitedate);
+                try {
+                    Date temp = new SimpleDateFormat("yyyy-MM-dd").parse(satellitedate);
+                    satellitedate = new SimpleDateFormat("yyyy-MM-dd").format(temp);
 
-                //Log.d("date", satellitedate);
-                new DownloadImageTask().execute(satellite.getImage_url());
-                satelliteArrayList.add(satellite);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
+                Log.d("URL", imageurl);
+
+                new DownloadImageTask().execute(imageurl);
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+
+
         }
+
+
 
         private class DownloadImageTask extends  AsyncTask<String, Void, Bitmap> {
 
@@ -173,49 +202,31 @@ public class SatelliteFragment extends Fragment {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                img[counter] = mappic;
+                data.put(datearray[counter], img[counter]);
+                Log.d("date", String.valueOf(datearray[counter]));
+                counter++;
 
-                savepath = saveToInternalStorage(mappic);
-                Log.d("Path", savepath);
-                satellite.setBitmap(savepath);
-                satelliteArrayList.add(satellite);
                 return mappic;
+
             }
 
             protected void onPostExecute(Bitmap result) {
 
 
-            }
-        }
+                if (counter == imgnum) {
+                    SetUI();
+                }
 
-        private String saveToInternalStorage(Bitmap bitmap) {
-
-            ContextWrapper cw = new ContextWrapper(getActivity().getApplicationContext());
-            File directory = cw.getDir("imageDir" + String.valueOf(index) , Context.MODE_PRIVATE);
-            File mypath = new File(directory, "satpic.jpg");
-
-            FileOutputStream fos;
-
-            try {
-                fos = new FileOutputStream(mypath);
-
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
-                Log.d("Save", "Complete");
-                fos.close();
-                index++;
-            } catch (Exception e) {
-                e.printStackTrace();
             }
 
-            return directory.getAbsolutePath();
         }
+
     }
 
-
-
     public void performNASARequestSequence() {
-
         Date date = new Date();
-        String sdate = "2015-05-01";
+        String sdate = "2015-05-03";
 
         SimpleDateFormat fomatter = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -228,17 +239,27 @@ public class SatelliteFragment extends Fragment {
         lon = 150.8931239f;
         lat = -34.424984f;
 
-        String adate = getDate(date, 0);
+        datearray[0] = getDate(date, 0);
 
-        performNASARequest(adate, lon, lat);
+//        //Log.d("Check date", adate);
+//
+        performNASARequest(datearray[0], lon, lat);
 
-        adate = getDate(date, 16);
+        datearray[1] = getDate(date, 16);
+//        //Log.d("Check date", adate);
+        performNASARequest(datearray[1], lon, lat);
+
+        datearray[2] = getDate(date, 32);
         //Log.d("Check date", adate);
-        performNASARequest(adate, lon, lat);
+        performNASARequest(datearray[2], lon, lat);
 
-        adate = getDate(date, 32);
+        datearray[3] = getDate(date, 48);
         //Log.d("Check date", adate);
-        performNASARequest(adate, lon, lat);
+        performNASARequest(datearray[3], lon, lat);
+
+        datearray[4] = getDate(date, 64);
+        //Log.d("Check date", adate);
+        performNASARequest(datearray[4], lon, lat);
 
     }
 
@@ -255,19 +276,29 @@ public class SatelliteFragment extends Fragment {
     }
 
     public void SetUI() {
-        Log.d("Size", String.valueOf(satelliteArrayList.size()));
-        String path = satelliteArrayList.get(satelliteArrayList.size()).getBitmap();
 
-        loadImageFromStorage(path);
+        Timer mTimer = new Timer();
+        mTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                // As timer is not a Main/UI thread need to do all UI task on runOnUiThread
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // increase your position so new image will show
+                        position += 1;
+                        // check whether position increased to length then set it to 0
+                        // so it will show images in circuler
+                        if (position >= imgnum)
+                            position = 0;
+                        // Set Image
+                        mapview.setImageBitmap(data.get(datearray[position]));
+                        textView.setText(datearray[position]);
+                    }
+                });
+            }
+        }, 0, 3000);
     }
 
-    private void loadImageFromStorage(String path) {
-        try {
-            File f = new File(path, "satpic.jpg");
-            Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
-            mapview.setImageBitmap(b);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
+
 }

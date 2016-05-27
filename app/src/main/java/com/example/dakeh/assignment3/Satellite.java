@@ -1,5 +1,7 @@
 package com.example.dakeh.assignment3;
 
+import android.graphics.Bitmap;
+
 import java.io.Serializable;
 
 /**
@@ -10,15 +12,15 @@ public class Satellite {
 
     private String image_url;
     private String date;
-    private String imgpath;
+    private Bitmap satpic;
 
     String getDate() {return date;}
 
     void setDate(String date) {this.date = date;}
 
-    String getBitmap() {return imgpath;}
+    Bitmap getBitmap() {return satpic;}
 
-    void setBitmap(String imgpath) {this.imgpath = imgpath;}
+    void setBitmap(Bitmap satpic) {this.satpic = satpic;}
 
     String getImage_url() {
         return image_url;

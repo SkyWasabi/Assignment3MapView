@@ -31,7 +31,6 @@ public class MainActivity extends AppCompatActivity {
         if (networkInfo != null && networkInfo.isConnected()) {
             Log.d("Connected", "true");
             satelliteFragment.performNASARequestSequence();
-
         }
 
         else {
