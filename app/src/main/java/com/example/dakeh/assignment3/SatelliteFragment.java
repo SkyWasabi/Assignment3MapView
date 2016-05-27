@@ -233,9 +233,6 @@ public class SatelliteFragment extends Fragment {
             e.printStackTrace();
         }
 
-        lon = 150.8931239f;
-        lat = -34.424984f;
-
         datearray[0] = getDate(date, 0);
 
 //        //Log.d("Check date", adate);

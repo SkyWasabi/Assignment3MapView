@@ -17,7 +17,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
 
-public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MainActivity extends FragmentActivity {
     private GoogleMap map;
 
     @Override
@@ -31,8 +31,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
-        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        com.example.dakeh.assignment3.MapFragment mapFragment = new com.example.dakeh.assignment3.MapFragment();
+        fragmentTransaction.add(R.id.map, mapFragment);
+
+//
+//        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
+//        mapFragment.getMapAsync(this);
 
 
 //        SatelliteFragment satelliteFragment = new SatelliteFragment();
@@ -50,12 +54,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    @Override
-    public void onMapReady(GoogleMap map) {
-        map.addMarker(new MarkerOptions()
-                .position(new LatLng(0, 0))
-                .title("Marker"));
-    }
+//    @Override
+//    public void onMapReady(GoogleMap map) {
+//        map.addMarker(new MarkerOptions()
+//                .position(new LatLng(0, 0))
+//                .title("Marker"));
+//    }
 
 
 
