@@ -3,15 +3,22 @@ package com.example.dakeh.assignment3;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.google.android.gms.maps.*;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
+    private GoogleMap map;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,14 +30,19 @@ public class MainActivity extends AppCompatActivity {
 
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        SatelliteFragment satelliteFragment = new SatelliteFragment();
-        fragmentTransaction.add(R.id.satellite_container, satelliteFragment);
+
+        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+
+
+//        SatelliteFragment satelliteFragment = new SatelliteFragment();
+//        fragmentTransaction.add(R.id.satellite_container, satelliteFragment);
         fragmentTransaction.commit();
 
 
         if (networkInfo != null && networkInfo.isConnected()) {
             Log.d("Connected", "true");
-            satelliteFragment.performNASARequestSequence();
+//            satelliteFragment.performNASARequestSequence();
         }
 
         else {
@@ -38,6 +50,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onMapReady(GoogleMap map) {
+        map.addMarker(new MarkerOptions()
+                .position(new LatLng(0, 0))
+                .title("Marker"));
+    }
 
 
 

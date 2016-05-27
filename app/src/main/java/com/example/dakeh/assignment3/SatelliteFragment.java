@@ -107,7 +107,6 @@ public class SatelliteFragment extends Fragment {
 
 
     private class DownloadTask extends AsyncTask<String, Void, String> {
-        Satellite satellite = new Satellite();
         @Override
         protected String doInBackground(String... urls) {
             try {
@@ -189,8 +188,6 @@ public class SatelliteFragment extends Fragment {
 
 
         }
-
-
 
         private class DownloadImageTask extends  AsyncTask<String, Void, Bitmap> {
 
@@ -300,5 +297,19 @@ public class SatelliteFragment extends Fragment {
         }, 0, 3000);
     }
 
+    void setLon(float lon) {
+        this.lon = lon;
+    }
 
+    float getLon() {
+        return this.lon;
+    }
+
+    void setLat(float lat) {
+        this.lat = lat;
+    }
+
+    float getLat() {
+        return this.lat;
+    }
 }
