@@ -49,7 +49,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, GoogleM
         try {
             view = inflater.inflate(R.layout.fragment_map, container, false);
             MapsInitializer.initialize(this.getActivity());
-            mMapView = (MapView) view.findViewById(R.id.mapview);
+            mMapView = (MapView) view.findViewById(R.id.googlemap);
             mMapView.onCreate(savedInstanceState);
             mMapView.getMapAsync(this);
             historycalimage = (Button) view.findViewById(R.id.history);
@@ -58,9 +58,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, GoogleM
                 public void onClick(View v) {
                     Toast.makeText(getActivity(), "Button clicked", Toast.LENGTH_SHORT).show();
                     SatelliteFragment satellitefragment = new SatelliteFragment();
+                    satellitefragment.setLat(lat);
+                    satellitefragment.setLon(lon);
 
                     FragmentTransaction ft = getFragmentManager().beginTransaction();
-                    ft.replace(R.id.satellite_container, satellitefragment);
+                    ft.replace(R.id.mapfrag, satellitefragment);
                     ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                     ft.addToBackStack(null);
                     ft.commit();

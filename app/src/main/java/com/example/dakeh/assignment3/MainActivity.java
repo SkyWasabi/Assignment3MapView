@@ -18,7 +18,6 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import java.util.ArrayList;
 
 public class MainActivity extends FragmentActivity {
-    private GoogleMap map;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +31,7 @@ public class MainActivity extends FragmentActivity {
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
         com.example.dakeh.assignment3.MapFragment mapFragment = new com.example.dakeh.assignment3.MapFragment();
-        fragmentTransaction.add(R.id.map, mapFragment);
+        fragmentTransaction.add(R.id.mapfrag, mapFragment);
 
 //
 //        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);

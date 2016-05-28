@@ -6,8 +6,8 @@
     tools:context="com.example.dakeh.assignment3.MapFragment">
 
     <com.google.android.gms.maps.MapView
-        android:id="@+id/mapview"
-        android:layout_height="wrap_content"
+        android:id="@+id/googlemap"
+        android:layout_height="match_parent"
         android:layout_width="match_parent" />
 
 
@@ -17,7 +17,7 @@
         android:text="Historical Image"
         android:id="@+id/history"
         android:layout_gravity="center_horizontal|center"
-        android:layout_alignBottom="@+id/mapview"/>
+        android:layout_alignBottom="@+id/googlemap"/>
 
 
 
